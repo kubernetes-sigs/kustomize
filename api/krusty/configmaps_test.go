@@ -51,6 +51,60 @@ metadata:
 `)
 }
 
+// Hex integers wider than 64 bits must be quoted, same as integers that fit.
+// go-yaml only forces quotes for ints it can parse into int64/uint64, so a
+// plain 2^64 hex scalar is what YAML 1.1 parsers read as a number.
+// See https://github.com/kubernetes-sigs/kustomize/issues/5432
+func TestConfigMapGeneratorQuotesOversizedHex(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+- name: test-config
+  envs:
+  - test.env
+`)
+	th.WriteF("test.env", `
+# 2^64-1
+A=0x000000000000000000000000FFFFFFFFFFFFFFFF
+AA="0x000000000000000000000000FFFFFFFFFFFFFFFF"
+# 2^64
+B=0x0000000000000000000000010000000000000000
+BB="0x0000000000000000000000010000000000000000"
+C=0xFFFFFFFFFFFFFFFF
+CC="0xFFFFFFFFFFFFFFFF"
+D=0x10000000000000000
+DD="0x10000000000000000"
+# 2^64-1
+E=18446744073709551615
+EE="18446744073709551615"
+# 2^64
+F=18446744073709551616
+FF="18446744073709551616"
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+data:
+  A: "0x000000000000000000000000FFFFFFFFFFFFFFFF"
+  AA: '"0x000000000000000000000000FFFFFFFFFFFFFFFF"'
+  B: "0x0000000000000000000000010000000000000000"
+  BB: '"0x0000000000000000000000010000000000000000"'
+  C: "0xFFFFFFFFFFFFFFFF"
+  CC: '"0xFFFFFFFFFFFFFFFF"'
+  D: "0x10000000000000000"
+  DD: '"0x10000000000000000"'
+  E: "18446744073709551615"
+  EE: '"18446744073709551615"'
+  F: "18446744073709551616"
+  FF: '"18446744073709551616"'
+kind: ConfigMap
+metadata:
+  name: test-config
+`)
+}
+
 func TestGeneratorIntVsStringWithMerge(t *testing.T) {
 	th := kusttest_test.MakeHarness(t)
 	th.WriteK("base", `
