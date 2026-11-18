@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -121,8 +122,35 @@ func (id ResId) IsInDefaultNs() bool {
 	return !id.IsClusterScoped() && id.isPutativelyDefaultNs()
 }
 
+// TreatAsClusterScopedForRefs reports whether this id should be treated as
+// cluster-scoped when matching name references.
+//
+// Built-in cluster-scoped types (Node, ClusterRole, etc.) always match.
+// Types that are not in OpenAPI (typically CRDs) and that have no namespace
+// are also treated as cluster-scoped: kustomize cannot read CRD spec.scope,
+// and cluster-scoped custom resources omit metadata.namespace.
+//
+// Known namespaced types with an empty namespace still mean the default
+// namespace, so they return false here.
+func (id ResId) TreatAsClusterScopedForRefs() bool {
+	if id.IsClusterScoped() {
+		return true
+	}
+	if id.Namespace != "" {
+		return false
+	}
+	return !isDefinitelyNamespaced(id.Gvk)
+}
+
 func (id ResId) isPutativelyDefaultNs() bool {
 	return id.Namespace == "" || id.Namespace == DefaultNamespace
+}
+
+// isDefinitelyNamespaced returns true if OpenAPI data indicates this GVK is
+// namespace-scoped. Unknown types return false.
+func isDefinitelyNamespaced(gvk Gvk) bool {
+	nsScoped, found := openapi.IsNamespaceScoped(gvk.AsTypeMeta())
+	return found && nsScoped
 }
 
 // EffectiveNamespace returns a non-ambiguous, non-empty
