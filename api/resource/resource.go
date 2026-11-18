@@ -33,6 +33,7 @@ var BuildAnnotations = []string{
 	utils.BuildAnnotationPrefixes,
 	utils.BuildAnnotationSuffixes,
 	utils.BuildAnnotationPreviousNamespaces,
+	utils.BuildAnnotationAppliedNamespaces,
 	utils.BuildAnnotationAllowNameChange,
 	utils.BuildAnnotationAllowKindChange,
 	utils.BuildAnnotationsRefBy,
@@ -160,7 +161,9 @@ func (r *Resource) DeepCopy() *Resource {
 // the resource.
 // TODO: move to RNode, use GetMeta to improve performance.
 // TODO: make a version of mergeStringMaps that is build-annotation aware
-//   to avoid repeatedly setting refby and genargs annotations
+//
+//	to avoid repeatedly setting refby and genargs annotations
+//
 // Must remove the kustomize bit at the end.
 func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) error {
 	if err := r.SetLabels(
@@ -455,6 +458,21 @@ func (r *Resource) PrevIds() []resid.ResId {
 func (r *Resource) StorePreviousId() {
 	id := r.CurId()
 	r.setPreviousId(id.EffectiveNamespace(), id.Name, id.Kind)
+}
+
+// AddNamespaceContext records that a kustomization namespace transformer
+// applied ns while this resource was in the resource set. Cluster-scoped
+// resources do not keep that value in metadata.namespace, but name reference
+// resolution still needs it when the same namespaced object is included from
+// more than one overlay.
+func (r *Resource) AddNamespaceContext(ns string) {
+	r.appendCsvAnnotation(utils.BuildAnnotationAppliedNamespaces, ns)
+}
+
+// AppliedNamespaces returns namespaces applied by kustomization namespace
+// transformers that included this resource, oldest first.
+func (r *Resource) AppliedNamespaces() []string {
+	return r.getCsvAnnotation(utils.BuildAnnotationAppliedNamespaces)
 }
 
 // CurId returns a ResId for the resource using the
