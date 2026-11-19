@@ -69,12 +69,12 @@ API semver hasn't been followed.  This was a mistake.
 Some options are
 
 - continue to ignore Go API semver and stick to
-  CLI semver (eliminating the usefullness of
+  CLI semver (eliminating the usefulness of
   minimal version selection),
 
 - obey semver, and increment the module's major
   version number with every release (drastically
-  reducing the usefullness of minimal version
+  reducing the usefulness of minimal version
   selection - since virtually all releases will
   be major),
 

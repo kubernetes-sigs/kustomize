@@ -227,7 +227,7 @@ resources and eliminate __B__'s kustomization.yaml file
 
 Conventionally, __B__ is in a directory that's sibling
 to __A__, or __B__ is off in a completely independent
-git repository, referencable from any kustomization.
+git repository, referenceable from any kustomization.
 
 A common layout is
 
