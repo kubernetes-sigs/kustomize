@@ -97,7 +97,7 @@ correct environment and flags for plugins:
 function kustomizeBd {
   XDG_CONFIG_HOME=$DEMO_HOME \
   kustomize build \
-    --enable_alpha_plugins \
+    --enable-alpha-plugins \
     $DEMO_HOME/$1
 }
 ```
