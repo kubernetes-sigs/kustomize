@@ -102,3 +102,24 @@ func TestAsHelmArgs(t *testing.T) {
 				"--devel"})
 	})
 }
+
+func TestSplitHelmParameters(t *testing.T) {
+	t.Run("keeps releaseNamespace", func(t *testing.T) {
+		old := []types.HelmChartArgs{{
+			ChartName:        "chart-name",
+			ChartVersion:     "1.0.0",
+			ChartRepoURL:     "https://helm.releases.hashicorp.com",
+			ReleaseName:      "test",
+			ReleaseNamespace: "my-ns",
+		}}
+		charts, _ := types.SplitHelmParameters(old)
+		require.Len(t, charts, 1)
+		require.Equal(t, types.HelmChart{
+			Name:        "chart-name",
+			Version:     "1.0.0",
+			Repo:        "https://helm.releases.hashicorp.com",
+			ReleaseName: "test",
+			Namespace:   "my-ns",
+		}, charts[0])
+	})
+}
