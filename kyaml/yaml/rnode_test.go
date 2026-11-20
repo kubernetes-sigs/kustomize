@@ -1260,6 +1260,9 @@ func TestRNode_UnmarshalJSONRejectsInvalidInput(t *testing.T) {
 		`value: 1`,
 		`{"value":1,}`,
 		`{"value":1} {"value":2}`,
+		`{"value":1}]`,
+		`{"value":1e1000}`,
+		`{"value":[1e1000]}`,
 		`[]`,
 		`1`,
 		`"value"`,
@@ -1270,6 +1273,28 @@ func TestRNode_UnmarshalJSONRejectsInvalidInput(t *testing.T) {
 			output, err := node.String()
 			require.NoError(t, err)
 			assert.Equal(t, "original: value\n", output)
+		})
+	}
+}
+
+func TestRNode_UnmarshalJSONCompatibility(t *testing.T) {
+	for _, tc := range []struct {
+		input string
+		want  string
+	}{
+		{`{"value":"\ud83d\ude00"}`, `{"value":"😀"}`},
+		{`{"value":1,"value":2}`, `{"value":2}`},
+		{`{"nested":{"value":1,"value":2}}`, `{"nested":{"value":2}}`},
+		{`{"on":"off","true":"false"}`, `{"on":"off","true":"false"}`},
+		{`null`, `{}`},
+		{`{"value":1.25e2}`, `{"value":125}`},
+	} {
+		t.Run(tc.input, func(t *testing.T) {
+			node := &RNode{}
+			require.NoError(t, node.UnmarshalJSON([]byte(tc.input)))
+			output, err := node.MarshalJSON()
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, string(output))
 		})
 	}
 }
