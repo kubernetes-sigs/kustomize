@@ -1226,6 +1226,79 @@ metadata:
 	}
 }
 
+func TestRNode_UnmarshalJSONPreservesScalarTypes(t *testing.T) {
+	for _, value := range []string{
+		`9007199254740993`,
+		`-9007199254740993`,
+		`9223372036854775807`,
+		`-9223372036854775808`,
+		`18446744073709551615`,
+		`"9007199254740993"`,
+		`"on"`,
+		`"off"`,
+		`"true"`,
+		`true`,
+		`false`,
+		`null`,
+		`0.125`,
+		`{"nested":[9007199254740993,"9007199254740993",null]}`,
+	} {
+		t.Run(value, func(t *testing.T) {
+			input := `{"value":` + value + `}`
+			node := &RNode{}
+			require.NoError(t, node.UnmarshalJSON([]byte(input)))
+			output, err := node.MarshalJSON()
+			require.NoError(t, err)
+			// Compare exact JSON: decoding into interface{} would hide rounding.
+			assert.Equal(t, input, string(output))
+		})
+	}
+}
+
+func TestRNode_UnmarshalJSONRejectsInvalidInput(t *testing.T) {
+	for _, input := range []string{
+		`value: 1`,
+		`{"value":1,}`,
+		`{"value":1} {"value":2}`,
+		`{"value":1}]`,
+		`{"value":1e1000}`,
+		`{"value":[1e1000]}`,
+		`[]`,
+		`1`,
+		`"value"`,
+	} {
+		t.Run(input, func(t *testing.T) {
+			node := MustParse("original: value\n")
+			require.Error(t, node.UnmarshalJSON([]byte(input)))
+			output, err := node.String()
+			require.NoError(t, err)
+			assert.Equal(t, "original: value\n", output)
+		})
+	}
+}
+
+func TestRNode_UnmarshalJSONCompatibility(t *testing.T) {
+	for _, tc := range []struct {
+		input string
+		want  string
+	}{
+		{`{"value":"\ud83d\ude00"}`, `{"value":"😀"}`},
+		{`{"value":1,"value":2}`, `{"value":2}`},
+		{`{"nested":{"value":1,"value":2}}`, `{"nested":{"value":2}}`},
+		{`{"on":"off","true":"false"}`, `{"on":"off","true":"false"}`},
+		{`null`, `{}`},
+		{`{"value":1.25e2}`, `{"value":125}`},
+	} {
+		t.Run(tc.input, func(t *testing.T) {
+			node := &RNode{}
+			require.NoError(t, node.UnmarshalJSON([]byte(tc.input)))
+			output, err := node.MarshalJSON()
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, string(output))
+		})
+	}
+}
+
 func TestRNode_MarshalJSON(t *testing.T) {
 	tests := []struct {
 		name string
