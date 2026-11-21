@@ -68,6 +68,11 @@ func updateNodeValue(node *yaml.Node, newValue interface{}) {
 	case float64:
 		node.SetString(strconv.FormatFloat(newValue, 'f', -1, 64))
 		node.Tag = yaml.NodeTagFloat
+	case nil:
+		// A nil replacement (e.g. a var referring to a null field) becomes
+		// a yaml null node instead of panicking on the string assertion.
+		node.Value = "null"
+		node.Tag = yaml.NodeTagNull
 	default:
 		node.SetString(newValue.(string))
 		node.Tag = yaml.NodeTagString

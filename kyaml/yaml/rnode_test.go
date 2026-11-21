@@ -2138,6 +2138,47 @@ bar: *a
 	}
 }
 
+func TestGetFieldValueReturnsNilForNull(t *testing.T) {
+	input := `
+kind: TestKind
+metadata:
+  name: hello-world
+spec:
+  fieldWithNullValue: null
+  fieldWithImplicitNull:
+  fieldWithTilde: ~
+  fieldWithStringNullValue: "null"
+`
+	rn, err := Parse(input)
+	if err != nil {
+		t.Fatalf("unexpected yaml parse error: %v", err)
+	}
+	// null fields of any spelling must return nil, not a string
+	for _, path := range []string{
+		"spec.fieldWithNullValue",
+		"spec.fieldWithImplicitNull",
+		"spec.fieldWithTilde",
+	} {
+		actual, err := rn.GetFieldValue(path)
+		if err != nil {
+			t.Fatalf("error getting field value %q: %v", path, err)
+		}
+		if actual != nil {
+			t.Errorf("GetFieldValue(%q) = (%T) %q, want nil", path, actual, actual)
+		}
+	}
+	// a quoted string "null" must remain distinguishable from a null value
+	actual, err := rn.GetFieldValue("spec.fieldWithStringNullValue")
+	if err != nil {
+		t.Fatalf("error getting field value: %v", err)
+	}
+	v, ok := actual.(string)
+	if !ok || v != "null" {
+		t.Errorf("GetFieldValue(spec.fieldWithStringNullValue) = (%T) %v, want string \"null\"",
+			actual, actual)
+	}
+}
+
 func TestGetString(t *testing.T) {
 	rn := NewRNode(nil)
 	if err := rn.UnmarshalJSON([]byte(deploymentBiggerJson)); err != nil {
