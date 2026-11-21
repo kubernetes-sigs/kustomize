@@ -1356,6 +1356,11 @@ func (rn *RNode) GetFieldValue(path string) (interface{}, error) {
 	}
 
 	switch yn.Tag {
+	case NodeTagNull:
+		// A null field (e.g. `field: null`, `field: ~` or an empty value)
+		// must be distinguishable from the string "null", so return nil
+		// rather than the node's raw (string) value.
+		return nil, nil
 	case NodeTagString:
 		return yn.Value, nil
 	case NodeTagInt:

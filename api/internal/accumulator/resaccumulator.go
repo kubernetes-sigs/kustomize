@@ -114,6 +114,12 @@ func (ra *ResAccumulator) findVarValueFromResources(v types.Var) (interface{}, e
 						"field specified in var '%v' "+
 							"not found in corresponding resource", v)
 				}
+				if s == nil {
+					// GetFieldValue returns nil for a null field. Var
+					// substitution is string-based, so preserve the
+					// historical behavior of substituting "null".
+					return "null", nil
+				}
 				return s, nil
 			}
 		}

@@ -2274,3 +2274,49 @@ metadata:
   name: theConfigMap-hdd8h8cgdt
 `)
 }
+
+func TestVarRefToNullField(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- pod.yaml
+vars:
+- name: NULL_VAL
+  objref:
+    apiVersion: v1
+    kind: Pod
+    name: clown
+  fieldref:
+    fieldpath: spec.nullField
+`)
+
+	th.WriteF("pod.yaml", `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: clown
+spec:
+  nullField: null
+  containers:
+  - name: frown
+    image: frown
+    env:
+      - name: FOO
+        value: "$(NULL_VAL)"
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: v1
+kind: Pod
+metadata:
+  name: clown
+spec:
+  containers:
+  - env:
+    - name: FOO
+      value: "null"
+    image: frown
+    name: frown
+  nullField: null
+`)
+}
