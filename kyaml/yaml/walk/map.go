@@ -6,6 +6,7 @@ package walk
 import (
 	"sort"
 
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/fieldmeta"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -106,9 +107,16 @@ func (l Walker) walkMap() (*yaml.RNode, error) {
 }
 
 // valueIfPresent returns node.Value if node is non-nil, otherwise returns nil
-func (l Walker) valueIfPresent(node *yaml.MapNode) (*yaml.RNode, *openapi.ResourceSchema) {
+// The bool reports that the schema is known to be empty, so callers can skip IsMissingOrNull.
+func (l Walker) valueIfPresent(node *yaml.MapNode) (*yaml.RNode, *openapi.ResourceSchema, bool) {
 	if node == nil {
-		return nil, nil
+		return nil, nil, true
+	}
+
+	// Fast path: FieldMeta.Read only parses line and head comments. With none on the value or the key,
+	// the result is a non-nil empty schema, exactly as the full path below returns.
+	if !hasFieldMetaComments(node.Value) && !hasFieldMetaComments(node.Key) {
+		return node.Value, &openapi.ResourceSchema{Schema: &spec.Schema{}}, true
 	}
 
 	// parse the schema for the field if present
@@ -139,7 +147,7 @@ func (l Walker) valueIfPresent(node *yaml.MapNode) (*yaml.RNode, *openapi.Resour
 			}
 		}
 	}
-	return node.Value, s
+	return node.Value, s, false
 }
 
 // fieldNames returns a sorted slice containing the names of all fields that appear in any of
@@ -171,12 +179,12 @@ func (l Walker) fieldValue(fieldName string) ([]*yaml.RNode, *openapi.ResourceSc
 			continue
 		}
 		field := l.Sources[i].Field(fieldName)
-		f, s := l.valueIfPresent(field)
+		f, s, knownEmpty := l.valueIfPresent(field)
 		fields = append(fields, f)
 		if field != nil && field.Key != nil && field.Key.YNode() != nil {
 			keyStyles[f] = field.Key.YNode().Style
 		}
-		if sch == nil && !s.IsMissingOrNull() {
+		if sch == nil && !knownEmpty && !s.IsMissingOrNull() {
 			sch = s
 		}
 	}

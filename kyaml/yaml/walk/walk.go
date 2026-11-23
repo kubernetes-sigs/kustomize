@@ -41,6 +41,16 @@ type Walker struct {
 	MergeOptions yaml.MergeOptions
 }
 
+// hasFieldMetaComments reports whether n carries the comments FieldMeta.Read parses (line or head).
+// Without them Read leaves the schema empty, so callers can skip Read and IsEmpty (a reflect.DeepEqual
+// on spec.Schema), which otherwise run for every field visited.
+func hasFieldMetaComments(n *yaml.RNode) bool {
+	if n == nil || n.YNode() == nil {
+		return false
+	}
+	return n.YNode().LineComment != "" || n.YNode().HeadComment != ""
+}
+
 // Kind returns the kind of the first non-null node in Sources.
 func (l Walker) Kind() yaml.Kind {
 	for _, s := range l.Sources {
@@ -94,6 +104,10 @@ func (l Walker) GetSchema() *openapi.ResourceSchema {
 			continue
 		}
 
+		// FieldMeta.Read only parses line and head comments, so without them the schema is empty.
+		if !hasFieldMetaComments(r) {
+			continue
+		}
 		fm := fieldmeta.FieldMeta{}
 		if err := fm.Read(r); err == nil && !fm.IsEmpty() {
 			// per-field schema, this is fine

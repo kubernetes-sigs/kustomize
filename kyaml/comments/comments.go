@@ -12,7 +12,12 @@ import (
 // CopyComments recursively copies the comments on fields in from to fields in to
 func CopyComments(from, to *yaml.RNode) error {
 	// from node should not be modified, it should be just used as a reference
-	fromCopy := from.Copy()
+	return copyComments(from.Copy(), to)
+}
+
+// copyComments walks fromCopy (already a private copy the walk may modify) and to. List items recurse
+// into it directly: they are part of the same copy, so copying them again only costs allocations.
+func copyComments(fromCopy, to *yaml.RNode) error {
 	copyFieldComments(fromCopy, to)
 	// walk the fields copying comments
 	_, err := walk.Walker{
@@ -57,7 +62,7 @@ func (c *copier) VisitList(s walk.Sources, _ *openapi.ResourceSchema, _ walk.Lis
 
 		if dest.Value == origin.Value {
 			// We copy the comments recursively on each node in the list.
-			if err := CopyComments(yaml.NewRNode(dest), yaml.NewRNode(origin)); err != nil {
+			if err := copyComments(yaml.NewRNode(dest), yaml.NewRNode(origin)); err != nil {
 				return nil, err
 			}
 		}
