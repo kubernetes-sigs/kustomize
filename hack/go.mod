@@ -90,7 +90,7 @@ require (
 	github.com/bep/golocales v0.2.0 // indirect
 	github.com/bep/goportabletext v0.2.0 // indirect
 	github.com/bep/helpers v0.12.0 // indirect
-	github.com/bep/imagemeta v0.17.2 // indirect
+	github.com/bep/imagemeta v0.17.3 // indirect
 	github.com/bep/lazycache v0.8.1 // indirect
 	github.com/bep/logg v0.4.0 // indirect
 	github.com/bep/mclib v1.20401.20400 // indirect
