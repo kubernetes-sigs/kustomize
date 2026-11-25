@@ -59,7 +59,8 @@ func (x *RepoSpec) CloneSpec() string {
 	return x.Host + x.RepoPath
 }
 
-func (x *RepoSpec) CloneDir() filesys.ConfirmedDir {
+// FetchDir returns the directory the repository is cloned to.
+func (x *RepoSpec) FetchDir() filesys.ConfirmedDir {
 	return x.Dir
 }
 
