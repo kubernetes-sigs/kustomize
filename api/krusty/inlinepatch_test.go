@@ -6,6 +6,7 @@ package krusty_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	kusttest_test "sigs.k8s.io/kustomize/api/testutils/kusttest"
 )
 
@@ -177,6 +178,77 @@ spec:
           name: configmap-in-base
         name: configmap-in-base
 `)
+}
+
+func TestJSONPatchMovesNameToGenerateName(t *testing.T) {
+	th := kusttest_test.MakeHarness(t)
+	th.WriteK(".", `
+resources:
+- jobs.yaml
+patches:
+- target:
+    kind: Job
+  patch: |-
+    - op: move
+      from: /metadata/name
+      path: /metadata/generateName
+`)
+	th.WriteF("jobs.yaml", `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: post-sync-
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sync-fail-
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: local-
+  annotations:
+    config.kubernetes.io/local-config: "true"
+`)
+	m := th.Run(".", th.MakeDefaultOptions())
+	th.AssertActualEqualsExpected(m, `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: post-sync-
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: sync-fail-
+`)
+}
+
+func TestJSONPatchCannotRemoveNameWithoutGenerateName(t *testing.T) {
+	for _, generateName := range []string{`""`, "null", "42"} {
+		t.Run(generateName, func(t *testing.T) {
+			th := kusttest_test.MakeHarness(t)
+			th.WriteK(".", `
+resources:
+- job.yaml
+patches:
+- target:
+    kind: Job
+  patch: |-
+    - op: remove
+      path: /metadata/name
+`)
+			th.WriteF("job.yaml", `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: my-job
+  generateName: `+generateName+"\n")
+			err := th.RunWithErr(".", th.MakeDefaultOptions())
+			require.ErrorContains(t, err, "missing metadata.name")
+		})
+	}
 }
 
 func TestExtendedPatchInlineYAML(t *testing.T) {

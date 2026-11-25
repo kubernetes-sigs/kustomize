@@ -6,7 +6,6 @@ package accumulator
 import (
 	"fmt"
 	"log"
-	"slices"
 	"strings"
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
@@ -167,18 +166,4 @@ func (ra *ResAccumulator) FixBackReferences() (err error) {
 	}
 	return ra.Transform(
 		newNameReferenceTransformer(ra.tConfig.NameReference))
-}
-
-// Intersection drops the resources which "other" does not have.
-func (ra *ResAccumulator) Intersection(other resmap.ResMap) error {
-	otherIds := other.AllIds() //nolint:revive
-	for _, curId := range ra.resMap.AllIds() {
-		if !slices.Contains(otherIds, curId) {
-			err := ra.resMap.Remove(curId)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
 }

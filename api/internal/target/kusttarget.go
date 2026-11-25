@@ -23,7 +23,9 @@ import (
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -159,12 +161,14 @@ func (kt *KustTarget) makeCustomizedResMap() (resmap.ResMap, error) {
 		return nil, err
 	}
 
-	err = kt.IgnoreLocal(ra)
-	if err != nil {
-		return nil, err
+	m := ra.ResMap()
+	if !kt.rFactory.RF().IncludeLocalConfigs {
+		if err := m.ApplyFilter(kio.FilterFunc(filterOutputResources)); err != nil {
+			return nil, errors.Wrap(err)
+		}
 	}
 
-	return ra.ResMap(), nil
+	return m, nil
 }
 
 func (kt *KustTarget) addHashesToNames(
@@ -251,17 +255,36 @@ func (kt *KustTarget) accumulateTarget(ra *accumulator.ResAccumulator) (
 	return ra, nil
 }
 
-// IgnoreLocal drops the local resource by checking the annotation "config.kubernetes.io/local-config".
-func (kt *KustTarget) IgnoreLocal(ra *accumulator.ResAccumulator) error {
-	rf := kt.rFactory.RF()
-	if rf.IncludeLocalConfigs {
-		return nil
+// filterOutputResources validates the final resources and drops local configs.
+func filterOutputResources(nodes []*kyaml.RNode) ([]*kyaml.RNode, error) {
+	var output []*kyaml.RNode
+	named := resmap.New()
+	for _, node := range nodes {
+		if node.IsNilOrEmpty() {
+			continue
+		}
+		metadata, validationErr := node.GetValidatedMetadata()
+		if validationErr != nil {
+			// A patch can replace the build-time name with a prefix for
+			// the API server to use when it generates the final name.
+			prefix, err := node.Pipe(kyaml.Lookup(kyaml.MetadataField, "generateName"))
+			if metadata.Kind == "" || metadata.Name != "" || err != nil ||
+				!prefix.IsStringValue() || kyaml.GetValue(prefix) == "" {
+				return nil, errors.Wrap(validationErr)
+			}
+		}
+		if localConfig, exists := metadata.Annotations[konfig.IgnoredByKustomizeAnnotation]; exists && localConfig != "false" {
+			continue
+		}
+		// Resources awaiting a generated name have no final ID to check.
+		if validationErr == nil {
+			if err := named.Append(&resource.Resource{RNode: *node}); err != nil {
+				return nil, errors.Wrap(err)
+			}
+		}
+		output = append(output, node)
 	}
-	remainRes, err := rf.DropLocalNodes(ra.ResMap().ToRNodeSlice())
-	if err != nil {
-		return err
-	}
-	return ra.Intersection(kt.rFactory.FromResourceSlice(remainRes))
+	return output, nil
 }
 
 func (kt *KustTarget) runGenerators(
