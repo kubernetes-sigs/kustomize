@@ -160,7 +160,9 @@ func (r *Resource) DeepCopy() *Resource {
 // the resource.
 // TODO: move to RNode, use GetMeta to improve performance.
 // TODO: make a version of mergeStringMaps that is build-annotation aware
-//   to avoid repeatedly setting refby and genargs annotations
+//
+//	to avoid repeatedly setting refby and genargs annotations
+//
 // Must remove the kustomize bit at the end.
 func (r *Resource) CopyMergeMetaDataFieldsFrom(other *Resource) error {
 	if err := r.SetLabels(
@@ -384,7 +386,20 @@ func (r *Resource) AsYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return yaml.JSONToYAML(json)
+	yml, err := yaml.JSONToYAML(json)
+	if err != nil {
+		return nil, fmt.Errorf("converting resource to YAML: %w", err)
+	}
+	// JSON has no quoting style. go-yaml then leaves integers that do not fit
+	// in 64 bits unquoted when they are hex, octal, or binary. ConfigMap and
+	// Secret string maps cannot hold numbers, so quote those scalars.
+	if r.GetKind() == "ConfigMap" || r.GetKind() == "Secret" {
+		yml, err = kyaml.QuoteOversizedIntegerScalars(yml)
+		if err != nil {
+			return nil, fmt.Errorf("quoting oversized integers: %w", err)
+		}
+	}
+	return yml, nil
 }
 
 // MustYaml returns YAML or panics.

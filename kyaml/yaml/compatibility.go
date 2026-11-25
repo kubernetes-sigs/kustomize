@@ -85,6 +85,12 @@ func IsValueNonString(value string) bool {
 		// multi-line strings will fail to unmarshal
 		return false
 	}
+	// go-yaml's resolver only accepts integers that fit in int64 or uint64.
+	// Bigger hex, octal, and binary literals stay strings in that parser, but
+	// YAML 1.1 still reads them as numbers when they are left unquoted.
+	if IsOversizedYAMLInteger(value) {
+		return true
+	}
 	// check if the value will unmarshal into a non-string value using a yaml 1.1 parser
 	var i1 interface{}
 	if err := y1_1.Unmarshal([]byte(value), &i1); err != nil {
