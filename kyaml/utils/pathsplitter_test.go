@@ -89,6 +89,18 @@ func TestSmarterPathSplitter(t *testing.T) {
 			input:    "metadata.annotations.[a.b.c/d.e.f-g.]",
 			expected: []string{"metadata", "annotations", "a.b.c/d.e.f-g."},
 		},
+		"mapping key without delimiter": {
+			input:    "metadata.annotations.[plainkey]",
+			expected: []string{"metadata", "annotations", "plainkey"},
+		},
+		"mapping key without delimiter mid path": {
+			input:    "a.[b].c",
+			expected: []string{"a", "b", "c"},
+		},
+		"sequence without delimiter retains brackets": {
+			input:    "spec.data.[name=first]",
+			expected: []string{"spec", "data", "[name=first]"},
+		},
 	}
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
