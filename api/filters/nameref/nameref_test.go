@@ -790,3 +790,78 @@ ref:
 		})
 	}
 }
+
+func TestClusterRoleBindingPrefersServiceAccountFromSameNamespaceContext(t *testing.T) {
+	referrerYAML := `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: crb-b
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cr
+subjects:
+- kind: ServiceAccount
+  name: sa
+`
+	candidatesYAML := `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa
+  namespace: a
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sa
+  namespace: b
+`
+	factory := provider.NewDefaultDepProvider().GetResourceFactory()
+	referrer, err := factory.FromBytes([]byte(referrerYAML))
+	if err != nil {
+		t.Fatal(err)
+	}
+	referrer.AddNamespaceContext("b")
+
+	candidatesRes, err := factory.SliceFromBytesWithNames(
+		[]string{"sa", "sa"}, []byte(candidatesYAML))
+	if err != nil {
+		t.Fatal(err)
+	}
+	candidatesRes[0].AddNamespaceContext("a")
+	// The ServiceAccount in namespace b was also namespaced by a base.
+	candidatesRes[1].AddNamespaceContext("shared")
+	candidatesRes[1].AddNamespaceContext("b")
+
+	filter := Filter{
+		Referrer: referrer,
+		NameFieldToUpdate: types.FieldSpec{
+			Path: "subjects",
+		},
+		ReferralTarget: resid.Gvk{
+			Version: "v1",
+			Kind:    "ServiceAccount",
+		},
+		ReferralCandidates: resmap.NewFactory(factory).FromResourceSlice(candidatesRes),
+	}
+	result := filtertest_test.RunFilter(t, referrerYAML, filter)
+	expected := `
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: crb-b
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cr
+subjects:
+- kind: ServiceAccount
+  name: sa
+  namespace: b
+`
+	if !assert.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(result)) {
+		t.FailNow()
+	}
+}
