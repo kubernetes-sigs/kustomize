@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/api/konfig"
 	"sigs.k8s.io/kustomize/api/provenance"
 	. "sigs.k8s.io/kustomize/kustomize/v5/commands/build"
@@ -194,6 +195,62 @@ type: Opaque
 `, version)
 	if string(data) != expected {
 		t.Fatalf("Expected:\n%s\nBut got:\n%s\n", expected, string(data))
+	}
+}
+
+func TestBuildWithGeneratedNames(t *testing.T) {
+	fSys := filesys.MakeFsInMemory()
+	require.NoError(t, fSys.WriteFile(konfig.DefaultKustomizationFileName(), []byte(`
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- jobs.yaml
+patches:
+- target:
+    kind: Job
+    name: (post-sync-|sync-fail-)
+  patch: |-
+    - op: move
+      from: /metadata/name
+      path: /metadata/generateName
+`)))
+	require.NoError(t, fSys.WriteFile("jobs.yaml", []byte(`
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: post-sync-
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sync-fail-
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: _1
+`)))
+
+	output := new(bytes.Buffer)
+	cmd := NewCmdBuild(fSys, MakeHelp("kustomize", "build"), output)
+	require.NoError(t, cmd.RunE(cmd, nil))
+	require.Contains(t, output.String(), "generateName: post-sync-")
+	require.Contains(t, output.String(), "generateName: sync-fail-")
+
+	require.NoError(t, fSys.Mkdir("out"))
+	require.NoError(t, cmd.Flags().Set("output", "out"))
+	require.NoError(t, cmd.RunE(cmd, nil))
+	files, err := fSys.ReadDir("out")
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{"batch_v1_job__1.yaml", "batch_v1_job__2.yaml", "batch_v1_job__3.yaml"}, files)
+	for file, field := range map[string]string{
+		"out/batch_v1_job__1.yaml": "name: _1",
+		"out/batch_v1_job__2.yaml": "generateName: post-sync-",
+		"out/batch_v1_job__3.yaml": "generateName: sync-fail-",
+	} {
+		contents, err := fSys.ReadFile(file)
+		require.NoError(t, err)
+		require.Contains(t, string(contents), field)
 	}
 }
 

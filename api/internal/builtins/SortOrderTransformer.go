@@ -9,7 +9,9 @@ import (
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/resid"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -63,28 +65,25 @@ func (p *SortOrderTransformerPlugin) validate() error {
 	return nil
 }
 
-func (p *SortOrderTransformerPlugin) Transform(m resmap.ResMap) (err error) {
+func (p *SortOrderTransformerPlugin) Transform(m resmap.ResMap) error {
 	p.applyDefaults()
-	err = p.validate()
-	if err != nil {
+	if err := p.validate(); err != nil {
 		return err
 	}
-
-	// Sort
-	if p.SortOptions.Order == types.LegacySortOrder {
-		s := newLegacyIDSorter(m.Resources(), p.SortOptions.LegacySortOptions)
-		sort.Sort(s)
-
-		// Clear the map and re-add the resources in the sorted order.
-		m.Clear()
-		for _, r := range s.resources {
-			err := m.Append(r)
-			if err != nil {
-				return errors.WrapPrefixf(err, "SortOrderTransformer: Failed to append to resources")
-			}
-		}
+	if p.SortOptions.Order != types.LegacySortOrder {
+		return nil
 	}
-	return nil
+
+	s := newLegacyIDSorter(m.Resources(), p.SortOptions.LegacySortOptions)
+	// Keep the input order when resources awaiting generated names sort equally.
+	sort.Stable(s)
+	return errors.Wrap(m.ApplyFilter(kio.FilterFunc(func(_ []*kyaml.RNode) ([]*kyaml.RNode, error) {
+		ordered := make([]*kyaml.RNode, len(s.resources))
+		for i, res := range s.resources {
+			ordered[i] = &res.RNode
+		}
+		return ordered, nil
+	})))
 }
 
 // Code for legacy sorting.
