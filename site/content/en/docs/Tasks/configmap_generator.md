@@ -161,7 +161,7 @@ data:
 ## Create ConfigMap with options
 The labels and annotations of a generated ConfigMap can be set with the `options` field. The name suffix hash can also be disabled.
 
-Labels and annotations added with `options` will not be overwritten by values defind in the `generatorOptions` field. Note that `disableNameSuffixHash: true` defined in `globalOptions` will override the locally defined `options`. This is a result of boolean behavior.
+Labels and annotations added with `options` will not be overwritten by values defined in the `generatorOptions` field. Note that `disableNameSuffixHash: true` defined in `globalOptions` will override the locally defined `options`. This is a result of boolean behavior.
 
 The following example generates a ConfigMap with labels, annotations and does not add a suffix hash to the name.
 
