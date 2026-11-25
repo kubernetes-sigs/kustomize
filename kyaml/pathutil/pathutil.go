@@ -4,6 +4,7 @@
 package pathutil
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -16,8 +17,14 @@ func DirsWithFile(root, fileName string, recurse bool) ([]string, error) {
 	if !recurse {
 		// check if the file with fileName is present in root and return it
 		// else return empty list
-		_, err := os.Stat(filepath.Join(root, fileName))
-		if !os.IsNotExist(err) {
+		info, err := os.Stat(filepath.Join(root, fileName))
+		if os.IsNotExist(err) {
+			return res, nil
+		}
+		if err != nil {
+			return res, fmt.Errorf("checking for %q in %q: %w", fileName, root, err)
+		}
+		if !info.IsDir() {
 			res = append(res, filepath.Clean(root))
 		}
 		return res, nil
@@ -27,7 +34,7 @@ func DirsWithFile(root, fileName string, recurse bool) ([]string, error) {
 			if err != nil {
 				return err
 			}
-			if filepath.Base(path) == fileName {
+			if !info.IsDir() && filepath.Base(path) == fileName {
 				res = append(res, filepath.Dir(path))
 			}
 			return nil

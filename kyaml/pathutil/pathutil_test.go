@@ -4,11 +4,13 @@
 package pathutil
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSubDirsWithFile(t *testing.T) {
@@ -90,4 +92,24 @@ func createTestDirStructure(dir string) error {
 		return err
 	}
 	return nil
+}
+
+func TestDirsWithFileIgnoresDirectories(t *testing.T) {
+	for _, recurse := range []bool{false, true} {
+		t.Run(fmt.Sprint(recurse), func(t *testing.T) {
+			root := t.TempDir()
+			require.NoError(t, os.Mkdir(filepath.Join(root, "Krmfile"), 0755))
+			got, err := DirsWithFile(root, "Krmfile", recurse)
+			require.NoError(t, err)
+			assert.Empty(t, got)
+		})
+	}
+}
+
+func TestDirsWithFileStatError(t *testing.T) {
+	got, err := DirsWithFile(t.TempDir(), "Krmfile\x00", false)
+	require.Error(t, err)
+	var pathErr *os.PathError
+	assert.ErrorAs(t, err, &pathErr)
+	assert.Empty(t, got)
 }
