@@ -44,24 +44,37 @@ func (p *NamespaceTransformerPlugin) Config(
 }
 
 func (p *NamespaceTransformerPlugin) Transform(m resmap.ResMap) error {
-	if len(p.Namespace) == 0 {
-		return nil
-	}
 	for _, r := range m.Resources() {
 		if r.IsNilOrEmpty() {
 			// Don't mutate empty objects?
 			continue
 		}
-		if annotations := r.GetAnnotations(konfig.HelmGeneratedAnnotation); annotations[konfig.HelmGeneratedAnnotation] == "true" {
-			// Don't apply namespace on Helm generated manifest. Helm should take care of it.
+		transformedNamespace := p.Namespace
+		unsetOnly := p.UnsetOnly
+		setRoleBindingSubjects := p.SetRoleBindingSubjects
+		fieldSpecs := p.FieldSpecs
+		if annotations := r.GetAnnotations(); annotations[konfig.HelmGeneratedAnnotation] == "true" {
+			// Preserve namespaces emitted by Helm, and only fill a missing metadata.namespace.
+			unsetOnly = true
+			// Helm charts own every other namespace reference, such as (cluster)role
+			// binding subjects or the fields matched by field specs, so don't touch them.
+			setRoleBindingSubjects = namespace.NoSubjects
+			fieldSpecs = nil
+			if helmNamespace := annotations[konfig.HelmChartNamespaceAnnotation]; helmNamespace != "" {
+				transformedNamespace = helmNamespace
+			}
+		}
+		if len(transformedNamespace) == 0 {
+			// No namespace to apply to this resource, e.g. the kustomization
+			// sets no namespace and only helmCharts[].namespace is given.
 			continue
 		}
 		r.StorePreviousId()
 		if err := r.ApplyFilter(namespace.Filter{
-			Namespace:              p.Namespace,
-			FsSlice:                p.FieldSpecs,
-			SetRoleBindingSubjects: p.SetRoleBindingSubjects,
-			UnsetOnly:              p.UnsetOnly,
+			Namespace:              transformedNamespace,
+			FsSlice:                fieldSpecs,
+			SetRoleBindingSubjects: setRoleBindingSubjects,
+			UnsetOnly:              unsetOnly,
 		}); err != nil {
 			return err
 		}
