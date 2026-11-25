@@ -4,8 +4,10 @@
 package yaml
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"regexp"
@@ -1002,8 +1004,20 @@ func (rn *RNode) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON overwrites this RNode with data from []byte.
 func (rn *RNode) UnmarshalJSON(b []byte) error {
+	decoder := json.NewDecoder(bytes.NewReader(b))
+	decoder.UseNumber()
 	m := map[string]interface{}{}
-	if err := json.Unmarshal(b, &m); err != nil {
+	if err := decoder.Decode(&m); err != nil {
+		return errors.Wrap(err)
+	}
+	var extra interface{}
+	if err := decoder.Decode(&extra); err != io.EOF {
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		return fmt.Errorf("unexpected extra JSON value")
+	}
+	if _, err := convertJSONNumbers(m); err != nil {
 		return err
 	}
 	r, err := FromMap(m)
@@ -1012,6 +1026,38 @@ func (rn *RNode) UnmarshalJSON(b []byte) error {
 	}
 	rn.value = r.value
 	return nil
+}
+
+// convertJSONNumbers keeps integers numeric when marshaling the decoded JSON as YAML.
+func convertJSONNumbers(value interface{}) (interface{}, error) {
+	switch value := value.(type) {
+	case json.Number:
+		if n, err := value.Int64(); err == nil {
+			return n, nil
+		}
+		if n, err := strconv.ParseUint(string(value), 10, 64); err == nil {
+			return n, nil
+		}
+		n, err := value.Float64()
+		return n, errors.Wrap(err)
+	case map[string]interface{}:
+		for key, item := range value {
+			n, err := convertJSONNumbers(item)
+			if err != nil {
+				return nil, err
+			}
+			value[key] = n
+		}
+	case []interface{}:
+		for i, item := range value {
+			n, err := convertJSONNumbers(item)
+			if err != nil {
+				return nil, err
+			}
+			value[i] = n
+		}
+	}
+	return value, nil
 }
 
 // DeAnchor inflates all YAML aliases with their anchor values.
