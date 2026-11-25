@@ -232,6 +232,127 @@ spec:
 			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
 		},
 	},
+	{description: `merge k8s deployment initContainers - prepend keeps dest order`,
+		source: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: third
+        image: patched
+`,
+		dest: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: first
+      - name: second
+      - name: third
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: first
+      - name: second
+      - name: third
+        image: patched
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+		},
+	},
+	{description: `merge k8s deployment initContainers - prepend inserts new element after its patch neighbor`,
+		source: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: second
+        image: patched
+      - name: extra
+`,
+		dest: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: first
+      - name: second
+      - name: third
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: first
+      - name: second
+        image: patched
+      - name: extra
+      - name: third
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+		},
+	},
+	{description: `merge k8s deployment env - prepend reorders only the named elements`,
+		source: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        env:
+        - name: C
+        - name: A
+`,
+		dest: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        env:
+        - name: A
+        - name: B
+        - name: C
+`,
+		expected: `
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        env:
+        - name: C
+        - name: B
+        - name: A
+`,
+		mergeOptions: yaml.MergeOptions{
+			ListIncreaseDirection: yaml.MergeOptionsListPrepend,
+		},
+	},
 	{description: `merge k8s deployment containers -- $patch directive`,
 		source: `
     apiVersion: apps/v1
