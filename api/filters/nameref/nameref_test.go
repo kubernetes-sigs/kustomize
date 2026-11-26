@@ -187,6 +187,80 @@ map:
 				},
 			},
 		},
+		"cluster-scoped crd refers to namespaced service account": {
+			referrerOriginal: `
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: secret-store
+spec:
+  serviceAccountRef:
+    name: oldName
+    namespace: external-secrets
+`,
+			candidates: `
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: newName
+  namespace: external-secrets
+`,
+			originalNames: []string{"oldName"},
+			referrerFinal: `
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: secret-store
+spec:
+  serviceAccountRef:
+    name: newName
+    namespace: external-secrets
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "spec/serviceAccountRef/name"},
+				ReferralTarget: resid.Gvk{
+					Kind: "ServiceAccount",
+				},
+			},
+		},
+		"namespaced crd refers to cluster-scoped crd": {
+			referrerOriginal: `
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: ext
+  namespace: cert-manager
+spec:
+  secretStoreRef:
+    name: oldName
+    kind: ClusterSecretStore
+`,
+			candidates: `
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: newName
+`,
+			originalNames: []string{"oldName"},
+			referrerFinal: `
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: ext
+  namespace: cert-manager
+spec:
+  secretStoreRef:
+    name: newName
+    kind: ClusterSecretStore
+`,
+			filter: Filter{
+				NameFieldToUpdate: types.FieldSpec{Path: "spec/secretStoreRef/name"},
+				ReferralTarget: resid.Gvk{
+					Group: "external-secrets.io",
+					Kind:  "ClusterSecretStore",
+				},
+			},
+		},
 		"null value": {
 			referrerOriginal: `
 apiVersion: apps/v1

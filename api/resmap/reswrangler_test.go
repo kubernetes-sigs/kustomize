@@ -664,6 +664,50 @@ func TestSubsetThatCouldBeReferencedByResource(t *testing.T) {
 	}
 }
 
+func TestSubsetThatCouldBeReferencedByUnknownClusterCRD(t *testing.T) {
+	sa, err := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "v1",
+			"kind":       "ServiceAccount",
+			"metadata": map[string]interface{}{
+				"name":      "my-sa",
+				"namespace": "external-secrets",
+			},
+		})
+	require.NoError(t, err)
+	store, err := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "external-secrets.io/v1beta1",
+			"kind":       "ClusterSecretStore",
+			"metadata": map[string]interface{}{
+				"name": "secret-store",
+			},
+		})
+	require.NoError(t, err)
+	ext, err := rf.FromMap(
+		map[string]interface{}{
+			"apiVersion": "external-secrets.io/v1beta1",
+			"kind":       "ExternalSecret",
+			"metadata": map[string]interface{}{
+				"name":      "ext",
+				"namespace": "cert-manager",
+			},
+		})
+	require.NoError(t, err)
+
+	m := resmaptest_test.NewRmBuilder(t, rf).AddR(sa).AddR(store).AddR(ext).ResMap()
+
+	got, err := m.SubsetThatCouldBeReferencedByResource(store)
+	require.NoError(t, err)
+	require.NoError(t, resmaptest_test.NewRmBuilder(t, rf).
+		AddR(sa).AddR(store).AddR(ext).ResMap().ErrorIfNotEqualLists(got))
+
+	got, err = m.SubsetThatCouldBeReferencedByResource(ext)
+	require.NoError(t, err)
+	require.NoError(t, resmaptest_test.NewRmBuilder(t, rf).
+		AddR(store).AddR(ext).ResMap().ErrorIfNotEqualLists(got))
+}
+
 func TestDeepCopy(t *testing.T) {
 	rm1 := resmaptest_test.NewRmBuilder(t, rf).Add(
 		map[string]interface{}{
