@@ -24,8 +24,8 @@ argsOneLiner: alice myMomsMaidenName
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  password: myMomsMaidenName
-  username: alice
+  password: "myMomsMaidenName"
+  username: "alice"
 kind: ConfigMap
 metadata:
   annotations:

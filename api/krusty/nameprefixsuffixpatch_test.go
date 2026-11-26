@@ -81,10 +81,10 @@ patches:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  HOST: everest
-  MYSQL_DATABASE: db
-  MYSQL_PASSWORD: correct horse battery staple
-  MYSQL_USER: my-user
+  HOST: "everest"
+  MYSQL_DATABASE: "db"
+  MYSQL_PASSWORD: "correct horse battery staple"
+  MYSQL_USER: "my-user"
 kind: ConfigMap
 metadata:
   name: mysql-t7tt4cdbmf

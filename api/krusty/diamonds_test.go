@@ -68,7 +68,7 @@ kind: ConfigMap
 metadata:
   name: settings
 data:
-  phaser: caress
+  phaser: "caress"
 `)
 }
 
@@ -133,8 +133,8 @@ kind: ConfigMap
 metadata:
   name: federation
 data:
-  zone: neutral
-  guardian: forever
+  zone: "neutral"
+  guardian: "forever"
 `)
 }
 
@@ -167,14 +167,14 @@ kind: ConfigMap
 metadata:
   name: federation
 data:
-  guardian: ofTheGalaxy
+  guardian: "ofTheGalaxy"
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: t-federation
 data:
-  zone: twilight
+  zone: "twilight"
 `)
 
 	m := th.Run("prod", th.MakeDefaultOptions())
@@ -189,7 +189,7 @@ spec:
 ---
 apiVersion: v1
 data:
-  phaser: caress
+  phaser: "caress"
 kind: ConfigMap
 metadata:
   name: prod-t-kirk-settings
@@ -213,8 +213,8 @@ spec:
 ---
 apiVersion: v1
 data:
-  guardian: ofTheGalaxy
-  zone: twilight
+  guardian: "ofTheGalaxy"
+  zone: "twilight"
 kind: ConfigMap
 metadata:
   name: prod-t-federation

@@ -1181,8 +1181,8 @@ data:
 	assert.Equal(t, strings.TrimSpace(`
 apiVersion: v1
 data:
-  color: blue
-  feeling: blue
+  color: "blue"
+  feeling: "blue"
 kind: ConfigMap
 metadata:
   name: wildcard
@@ -1289,16 +1289,16 @@ items:
 	assert.Equal(t, strings.TrimSpace(`
 apiVersion: v1
 data:
-  color: blue
-  feeling: blue
+  color: "blue"
+  feeling: "blue"
 kind: ConfigMap
 metadata:
   name: betty
 ---
 apiVersion: v1
 data:
-  color: red
-  feeling: blue
+  color: "red"
+  feeling: "blue"
 kind: ConfigMap
 metadata:
   name: bob

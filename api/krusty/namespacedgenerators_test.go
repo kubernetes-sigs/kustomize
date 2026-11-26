@@ -36,7 +36,7 @@ secretGenerator:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  altGreeting: Good Morning from non-default namespace!
+  altGreeting: "Good Morning from non-default namespace!"
   enableRisky: "false"
 kind: ConfigMap
 metadata:
@@ -45,7 +45,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  altGreeting: Good Morning from default namespace!
+  altGreeting: "Good Morning from default namespace!"
   enableRisky: "false"
 kind: ConfigMap
 metadata:
@@ -53,7 +53,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  password.txt: dmVyeVNlY3JldA==
+  password.txt: "dmVyeVNlY3JldA=="
 kind: Secret
 metadata:
   name: the-non-default-namespace-secret-8tc9gdd76t
@@ -62,7 +62,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  password.txt: YW5vdGhlclNlY3JldA==
+  password.txt: "YW5vdGhlclNlY3JldA=="
 kind: Secret
 metadata:
   name: the-secret-6557m7fcg8
@@ -96,8 +96,8 @@ configMapGenerator:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  base: apple
-  overlay: peach
+  base: "apple"
+  overlay: "peach"
 kind: ConfigMap
 metadata:
   name: testCase-gmfch8gkbt

@@ -27,8 +27,8 @@ keys:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  ROCKET: U2F0dXJuVg==
-  VEGETABLE: Y2Fycm90
+  ROCKET: "U2F0dXJuVg=="
+  VEGETABLE: "Y2Fycm90"
 kind: Secret
 metadata:
   name: forbiddenValues

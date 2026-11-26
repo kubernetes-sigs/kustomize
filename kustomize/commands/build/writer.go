@@ -10,7 +10,6 @@ import (
 	"sigs.k8s.io/kustomize/api/resmap"
 	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
-	"sigs.k8s.io/yaml"
 )
 
 type Writer struct {
@@ -46,11 +45,7 @@ func (w Writer) WriteIndividualFiles(dirPath string, m resmap.ResMap) error {
 }
 
 func (w Writer) write(path, fName string, res *resource.Resource) error {
-	m, err := res.Map()
-	if err != nil {
-		return err
-	}
-	yml, err := yaml.Marshal(m)
+	yml, err := res.AsYAML()
 	if err != nil {
 		return err
 	}

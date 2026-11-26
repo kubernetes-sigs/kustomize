@@ -32,12 +32,12 @@ OCEAN=pacific
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  FRUIT: YXBwbGU=
-  MOUNTAIN: ZXZlcmVzdA==
-  OCEAN: cGFjaWZpYw==
-  VEGETABLE: Y2Fycm90
-  foo.env: Ck1PVU5UQUlOPWV2ZXJlc3QKT0NFQU49cGFjaWZpYwo=
-  passphrase: ZGF0IHBocmFzZQ==
+  FRUIT: "YXBwbGU="
+  MOUNTAIN: "ZXZlcmVzdA=="
+  OCEAN: "cGFjaWZpYw=="
+  VEGETABLE: "Y2Fycm90"
+  foo.env: "Ck1PVU5UQUlOPWV2ZXJlc3QKT0NFQU49cGFjaWZpYwo="
+  passphrase: "ZGF0IHBocmFzZQ=="
 kind: Secret
 metadata:
   name: bob-bh645k7tmg
@@ -73,7 +73,7 @@ configMapGenerator:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  foo: bar
+  foo: "bar"
 kind: ConfigMap
 metadata:
   labels:
@@ -82,7 +82,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  fruit: apple
+  fruit: "apple"
 kind: ConfigMap
 metadata:
   labels:
@@ -120,8 +120,8 @@ configMapGenerator:
 	th.AssertActualEqualsExpected(m, `
 apiVersion: v1
 data:
-  foo: bar
-  fruit: apple
+  foo: "bar"
+  fruit: "apple"
 kind: ConfigMap
 metadata:
   labels:

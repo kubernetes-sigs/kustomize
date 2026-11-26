@@ -89,7 +89,7 @@ Now generate the Secret:
 result=$(kustomize build $DEMO_HOME)
 echo "$result"
 # Spot check the result:
-test 1 == $(echo "$result" | grep -c "FRUIT: YXBwbGU=")
+test 1 == $(echo "$result" | grep -cE 'FRUIT: "?YXBwbGU="?')
 ```
 
 This emits something like
@@ -101,10 +101,10 @@ This emits something like
 >   name: mysecrets-hfb5df789h
 > type: Opaque
 > data:
->   FRUIT: YXBwbGU=
->   VEGETABLE: Y2Fycm90
->   ROUTER_PASSWORD: YWRtaW4=
->   DB_PASSWORD: aWxvdmV5b3U=
+>   FRUIT: "YXBwbGU="
+>   VEGETABLE: "Y2Fycm90"
+>   ROUTER_PASSWORD: "YWRtaW4="
+>   DB_PASSWORD: "aWxvdmV5b3U="
 >   longsecret.txt: TG9yZW0gaXBzdW0gZG9sb3Igc2l0I... (elided)
 > ```
 
@@ -202,7 +202,7 @@ result=$( \
   kustomize build --enable_alpha_plugins $DEMO_HOME )
 echo "$result"
 # Spot check the result:
-test 1 == $(echo "$result" | grep -c "FRUIT: YXBwbGU=")
+test 1 == $(echo "$result" | grep -cE 'FRUIT: "?YXBwbGU="?')
 ```
 
 This should emit something like:
@@ -214,8 +214,8 @@ This should emit something like:
 >   name: mysecrets-bdt27dbkd6
 > type: Opaque
 > data:
->  FRUIT: YXBwbGU=
->  VEGETABLE: Y2Fycm90
+>  FRUIT: "YXBwbGU="
+>  VEGETABLE: "Y2Fycm90"
 > ```
 
 i.e. a subset of the same values as above.
