@@ -1734,6 +1734,113 @@ metadata:
 	}
 }
 
+func TestApplySmPatch_PreservesOrder(t *testing.T) {
+	base := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: first
+data:
+  color: blue
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: second
+data:
+  color: green
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: third
+data:
+  color: red
+`
+	patch := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: second
+data:
+  color: yellow
+  extra: patched
+`
+	expected := `apiVersion: v1
+data:
+  color: blue
+kind: ConfigMap
+metadata:
+  name: first
+---
+apiVersion: v1
+data:
+  color: yellow
+  extra: patched
+kind: ConfigMap
+metadata:
+  name: second
+---
+apiVersion: v1
+data:
+  color: red
+kind: ConfigMap
+metadata:
+  name: third
+`
+	m, err := rmF.NewResMapFromBytes([]byte(base))
+	require.NoError(t, err)
+	rp, err := rf.FromBytes([]byte(patch))
+	require.NoError(t, err)
+	require.NoError(t, m.ApplySmPatch(resource.MakeIdSet([]*resource.Resource{rp}), rp))
+	m.RemoveBuildAnnotations()
+	yaml, err := m.AsYaml()
+	require.NoError(t, err)
+	assert.Equal(t, expected, string(yaml))
+	assert.Equal(t, []string{"first", "second", "third"}, []string{
+		m.GetByIndex(0).GetName(),
+		m.GetByIndex(1).GetName(),
+		m.GetByIndex(2).GetName(),
+	})
+}
+
+func TestApplySmPatch_IdCollision(t *testing.T) {
+	base := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: first
+data:
+  color: blue
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: second
+data:
+  color: green
+`
+	patch := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: first
+data:
+  color: yellow
+`
+	m, err := rmF.NewResMapFromBytes([]byte(base))
+	require.NoError(t, err)
+	rp, err := rf.FromBytes([]byte(patch))
+	require.NoError(t, err)
+	rp.AllowNameChange()
+	require.NoError(t, rp.SetName("second"))
+	err = m.ApplySmPatch(resource.MakeIdSet(m.Resources()), rp)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(),
+		"may not add resource with an already registered id: ConfigMap.v1.[noGrp]/second.[noNs]")
+	assert.Equal(t, 0, m.Size())
+}
+
 func TestApplySmPatch_Deletion(t *testing.T) {
 	target := `
 apiVersion: apps/v1
