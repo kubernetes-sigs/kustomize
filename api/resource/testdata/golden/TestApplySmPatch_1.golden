@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    baseAnno: This is a base annotation
+  labels:
+    app: mungebot
+    foo: bar
+  name: bingo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      foo: bar
+  template:
+    metadata:
+      labels:
+        app: mungebot
+    spec:
+      containers:
+      - env:
+        - name: foo
+          value: bar
+        image: nginx
+        name: nginx
+        ports:
+        - containerPort: 777
+        - containerPort: 80

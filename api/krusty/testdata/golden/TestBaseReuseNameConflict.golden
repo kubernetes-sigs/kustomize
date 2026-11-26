@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: overlay-component1-postgres
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: overlay-component1-postgres
+spec:
+  selector:
+    matchLabels: {}
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      containers:
+      - image: postgres
+        imagePullPolicy: IfNotPresent
+        name: postgres
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - mountPath: /var/lib/postgresql
+          name: data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: overlay-component1-postgres
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: overlay-component2-postgres
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: overlay-component2-postgres
+spec:
+  selector:
+    matchLabels: {}
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      containers:
+      - image: postgres
+        imagePullPolicy: IfNotPresent
+        name: postgres
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - mountPath: /var/lib/postgresql
+          name: data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: overlay-component2-postgres

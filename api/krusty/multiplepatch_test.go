@@ -410,8 +410,8 @@ spec:
 }
 
 func TestVolumeRemoveEmptyDirInOverlay(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	th.WriteK("base", `
+	sharedTh := kusttest_test.MakeHarness(t)
+	sharedTh.WriteK("base", `
 resources:
 - deployment.yaml
 configMapGenerator:
@@ -419,7 +419,7 @@ configMapGenerator:
   literals:
   - foo=bar
 `)
-	th.WriteF("base/deployment.yaml", `
+	sharedTh.WriteF("base/deployment.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -440,37 +440,13 @@ spec:
           name: baseCm
         name: baseCm
 `)
-	m := th.Run("base", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx
-spec:
-  template:
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
-        volumeMounts:
-        - mountPath: /tmp/ps
-          name: fancyDisk
-      volumes:
-      - emptyDir: {}
-        name: fancyDisk
-      - configMap:
-          name: baseCm-798k5k7g9f
-        name: baseCm
----
-apiVersion: v1
-data:
-  foo: bar
-kind: ConfigMap
-metadata:
-  name: baseCm-798k5k7g9f
-`)
+	t.Run("base", func(t *testing.T) {
+		th := kusttest_test.MakeHarnessWithFs(t, sharedTh.GetFSys())
+		m := th.Run("base", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, "")
+	})
 
-	th.WriteK("overlay", `
+	sharedTh.WriteK("overlay", `
 patchesStrategicMerge:
 - patch.yaml
 resources:
@@ -480,7 +456,7 @@ configMapGenerator:
   literals:
   - hello=world
 `)
-	th.WriteF("overlay/patch.yaml", `
+	sharedTh.WriteF("overlay/patch.yaml", `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -497,46 +473,11 @@ spec:
           name: overlayCm
         name: overlayCm
 `)
-	m = th.Run("overlay", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx
-spec:
-  template:
-    spec:
-      containers:
-      - image: nginx
-        name: nginx
-        volumeMounts:
-        - mountPath: /tmp/ps
-          name: fancyDisk
-      volumes:
-      - gcePersistentDisk:
-          pdName: fancyDisk
-        name: fancyDisk
-      - configMap:
-          name: overlayCm-dc6fm46dhm
-        name: overlayCm
-      - configMap:
-          name: baseCm-798k5k7g9f
-        name: baseCm
----
-apiVersion: v1
-data:
-  foo: bar
-kind: ConfigMap
-metadata:
-  name: baseCm-798k5k7g9f
----
-apiVersion: v1
-data:
-  hello: world
-kind: ConfigMap
-metadata:
-  name: overlayCm-dc6fm46dhm
-`)
+	t.Run("overlay", func(t *testing.T) {
+		th := kusttest_test.MakeHarnessWithFs(t, sharedTh.GetFSys())
+		m := th.Run("overlay", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, "")
+	})
 }
 
 // Goal is to remove "  emptyDir: {}" with a patch.

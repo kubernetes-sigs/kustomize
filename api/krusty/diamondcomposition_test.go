@@ -299,26 +299,30 @@ spec:
 // the kustomization root), opening the user to whatever
 // threat the load restrictor was meant to address.
 func TestIssue1251_Patches_ProdVsDev(t *testing.T) {
-	th := kusttest_test.MakeHarness(t)
-	definePatchDirStructure(th)
+	opts := kusttest_test.MakeHarness(t).MakeDefaultOptions()
+	opts.LoadRestrictions = types.LoadRestrictionsNone
 
-	th.WriteK("prod", `
+	t.Run("prod", func(t *testing.T) {
+		th := kusttest_test.MakeHarness(t)
+		definePatchDirStructure(th)
+
+		th.WriteK("prod", `
 resources:
 - ../base
 patchesStrategicMerge:
 - ../patches/patchAddProbe.yaml
 - ../patches/patchDnsPolicy.yaml
 `)
-	opts := th.MakeDefaultOptions()
-	opts.LoadRestrictions = types.LoadRestrictionsNone
 
-	m := th.Run("prod", opts)
-	th.AssertActualEqualsExpected(m, prodDevMergeResult1)
+		m := th.Run("prod", opts)
+		th.AssertActualEqualsExpected(m, prodDevMergeResult1)
+	})
 
-	th = kusttest_test.MakeHarness(t)
-	definePatchDirStructure(th)
+	t.Run("dev", func(t *testing.T) {
+		th := kusttest_test.MakeHarness(t)
+		definePatchDirStructure(th)
 
-	th.WriteK("dev", `
+		th.WriteK("dev", `
 resources:
 - ../base
 patchesStrategicMerge:
@@ -326,8 +330,9 @@ patchesStrategicMerge:
 - ../patches/patchRestartPolicy.yaml
 `)
 
-	m = th.Run("dev", opts)
-	th.AssertActualEqualsExpected(m, prodDevMergeResult2)
+		m := th.Run("dev", opts)
+		th.AssertActualEqualsExpected(m, prodDevMergeResult2)
+	})
 }
 
 func TestIssue1251_Plugins_ProdVsDev(t *testing.T) {
@@ -335,8 +340,13 @@ func TestIssue1251_Plugins_ProdVsDev(t *testing.T) {
 		PrepBuiltin("PatchJson6902Transformer")
 	defer th.Reset()
 
-	defineTransformerDirStructure(th)
-	th.WriteK("prod", `
+	t.Run("prod", func(t *testing.T) {
+		th := kusttest_test.MakeEnhancedHarness(t).
+			PrepBuiltin("PatchJson6902Transformer")
+		defer th.Reset()
+
+		defineTransformerDirStructure(th)
+		th.WriteK("prod", `
 resources:
 - ../base
 transformers:
@@ -344,11 +354,17 @@ transformers:
 - ../patches/addDnsPolicy
 `)
 
-	m := th.Run("prod", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, prodDevMergeResult1)
+		m := th.Run("prod", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, prodDevMergeResult1)
+	})
 
-	defineTransformerDirStructure(th)
-	th.WriteK("dev", `
+	t.Run("dev", func(t *testing.T) {
+		th := kusttest_test.MakeEnhancedHarness(t).
+			PrepBuiltin("PatchJson6902Transformer")
+		defer th.Reset()
+
+		defineTransformerDirStructure(th)
+		th.WriteK("dev", `
 resources:
 - ../base
 transformers:
@@ -356,8 +372,9 @@ transformers:
 - ../patches/addDnsPolicy
 `)
 
-	m = th.Run("dev", th.MakeDefaultOptions())
-	th.AssertActualEqualsExpected(m, prodDevMergeResult2)
+		m := th.Run("dev", th.MakeDefaultOptions())
+		th.AssertActualEqualsExpected(m, prodDevMergeResult2)
+	})
 }
 
 func TestIssue1251_Plugins_Local(t *testing.T) {
