@@ -167,7 +167,7 @@ func detectResources(fSys filesys.FileSystem, rf *resource.Factory, base string,
 			// directory as a resource and do not decend into it.
 			for _, kfilename := range konfig.RecognizedKustomizationFileNames() {
 				if fSys.Exists(filepath.Join(path, kfilename)) {
-					paths = append(paths, path)
+					paths = append(paths, filepath.ToSlash(path))
 					return filepath.SkipDir
 				}
 			}
@@ -180,7 +180,8 @@ func detectResources(fSys filesys.FileSystem, rf *resource.Factory, base string,
 		if _, err := rf.SliceFromBytes(fContents); err != nil {
 			return nil
 		}
-		paths = append(paths, path)
+		// Kustomization files use "/" on every platform.
+		paths = append(paths, filepath.ToSlash(path))
 		return nil
 	})
 	return paths, err

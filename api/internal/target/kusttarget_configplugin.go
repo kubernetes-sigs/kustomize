@@ -5,7 +5,7 @@ package target
 
 import (
 	"fmt"
-	"path/filepath"
+	"path"
 
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinconfig"
 	"sigs.k8s.io/kustomize/api/internal/plugins/builtinhelpers"
@@ -49,7 +49,7 @@ func (kt *KustTarget) configureBuiltinGenerators() (
 			generatorOrigin = &resource.Origin{
 				Repo:         kt.origin.Repo,
 				Ref:          kt.origin.Ref,
-				ConfiguredIn: filepath.Join(kt.origin.Path, kt.kustFileName),
+				ConfiguredIn: path.Join(kt.origin.Path, kt.kustFileName),
 				ConfiguredBy: yaml.ResourceIdentifier{
 					TypeMeta: yaml.TypeMeta{
 						APIVersion: "builtin",
@@ -92,7 +92,7 @@ func (kt *KustTarget) configureBuiltinTransformers(
 			transformerOrigin = &resource.Origin{
 				Repo:         kt.origin.Repo,
 				Ref:          kt.origin.Ref,
-				ConfiguredIn: filepath.Join(kt.origin.Path, kt.kustFileName),
+				ConfiguredIn: path.Join(kt.origin.Path, kt.kustFileName),
 				ConfiguredBy: yaml.ResourceIdentifier{
 					TypeMeta: yaml.TypeMeta{
 						APIVersion: "builtin",

@@ -4,6 +4,7 @@
 package valueadd
 
 import (
+	"path/filepath"
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -125,8 +126,10 @@ func (f Filter) Filter(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
 			}
 			newValue := f.Value
 			if f.FilePathPosition > 0 {
-				newValue = filesys.InsertPathPart(
-					n.YNode().Value, f.FilePathPosition-1, newValue)
+				// The value lives in a resource, not on disk, so keep
+				// "/" as its separator on every platform.
+				newValue = filepath.ToSlash(filesys.InsertPathPart(
+					n.YNode().Value, f.FilePathPosition-1, newValue))
 			}
 			return n.Pipe(yaml.FieldSetter{StringValue: newValue})
 		})).Filter(nodes)

@@ -1,8 +1,6 @@
 // Copyright 2019 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-//go:build !windows
-
 package filesys
 
 import (
@@ -11,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -33,10 +32,12 @@ var topCases = []pathCase{
 		errStr: "illegal name '..' in file creation",
 	},
 	{
+		// Not a single letter before the colon, which
+		// Windows would read as a volume name, e.g. "C:".
 		what: "colon",
-		arg:  "a:b",
-		name: "a:b",
-		path: "a:b",
+		arg:  "ab:c",
+		name: "ab:c",
+		path: "ab:c",
 	},
 	{
 		what:   "empty",
@@ -605,7 +606,7 @@ func TestRegExpGlob(t *testing.T) {
 		filepath.Join("b", "d", "y"),
 		filepath.Join("b", "d", "z"),
 	}
-	paths, err := n.RegExpGlob("b/d/*")
+	paths, err := n.RegExpGlob(regexp.QuoteMeta(filepath.FromSlash("b/d/")) + "*")
 	if err != nil {
 		t.Fatalf("glob error: %v", err)
 	}
@@ -799,7 +800,7 @@ func TestCleanedAbs(t *testing.T) {
 		{
 			what:   "no directory",
 			full:   filepath.Join("b", "rrrrrr"),
-			errStr: "'b/rrrrrr' doesn't exist",
+			errStr: fmt.Sprintf("'%s' doesn't exist", filepath.Join("b", "rrrrrr")),
 		},
 		{
 			what: "longer, ending in file",
