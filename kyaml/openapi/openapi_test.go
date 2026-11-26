@@ -11,8 +11,116 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+func TestPatchStrategyAndKeyList(t *testing.T) {
+	testCases := []struct {
+		name       string
+		extensions map[string]interface{}
+		strategy   string
+		keys       []string
+	}{
+		{
+			name: "CRD map with one key",
+			extensions: map[string]interface{}{
+				"x-kubernetes-list-type":     "map",
+				"x-kubernetes-list-map-keys": []interface{}{"name"},
+			},
+			strategy: "merge",
+			keys:     []string{"name"},
+		},
+		{
+			name: "CRD map with ordered composite keys",
+			extensions: map[string]interface{}{
+				"x-kubernetes-list-type":     "map",
+				"x-kubernetes-list-map-keys": []interface{}{"port", "protocol"},
+			},
+			strategy: "merge",
+			keys:     []string{"port", "protocol"},
+		},
+		{
+			name: "legacy merge",
+			extensions: map[string]interface{}{
+				"x-kubernetes-patch-strategy":  "merge",
+				"x-kubernetes-patch-merge-key": "name",
+			},
+			strategy: "merge",
+			keys:     []string{"name"},
+		},
+		{
+			name: "legacy retainKeys merge",
+			extensions: map[string]interface{}{
+				"x-kubernetes-patch-strategy":  "retainKeys,merge",
+				"x-kubernetes-patch-merge-key": "name",
+			},
+			strategy: "retainKeys,merge",
+			keys:     []string{"name"},
+		},
+		{
+			name: "CRD map wins over legacy pair",
+			extensions: map[string]interface{}{
+				"x-kubernetes-list-type":       "map",
+				"x-kubernetes-list-map-keys":   []interface{}{"port", "protocol"},
+				"x-kubernetes-patch-strategy":  "merge",
+				"x-kubernetes-patch-merge-key": "port",
+			},
+			strategy: "merge",
+			keys:     []string{"port", "protocol"},
+		},
+		{
+			name: "legacy pair does not use stray CRD keys",
+			extensions: map[string]interface{}{
+				"x-kubernetes-list-map-keys":   []interface{}{"port", "protocol"},
+				"x-kubernetes-patch-strategy":  "merge",
+				"x-kubernetes-patch-merge-key": "name",
+			},
+			strategy: "merge",
+			keys:     []string{"name"},
+		},
+		{
+			name: "legacy pair is used when CRD keys have the wrong type",
+			extensions: map[string]interface{}{
+				"x-kubernetes-list-type":       "map",
+				"x-kubernetes-list-map-keys":   "name",
+				"x-kubernetes-patch-strategy":  "merge",
+				"x-kubernetes-patch-merge-key": "name",
+			},
+			strategy: "merge",
+			keys:     []string{"name"},
+		},
+		{
+			name: "legacy pair is used when a CRD key is not a string",
+			extensions: map[string]interface{}{
+				"x-kubernetes-list-type":       "map",
+				"x-kubernetes-list-map-keys":   []interface{}{"name", 1},
+				"x-kubernetes-patch-strategy":  "merge",
+				"x-kubernetes-patch-merge-key": "name",
+			},
+			strategy: "merge",
+			keys:     []string{"name"},
+		},
+		{
+			name: "atomic CRD list is not associative",
+			extensions: map[string]interface{}{
+				"x-kubernetes-list-type": "atomic",
+			},
+			keys: []string{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			schema := &ResourceSchema{Schema: &spec.Schema{
+				VendorExtensible: spec.VendorExtensible{Extensions: tc.extensions},
+			}}
+			strategy, keys := schema.PatchStrategyAndKeyList()
+			assert.Equal(t, tc.strategy, strategy)
+			assert.Equal(t, tc.keys, keys)
+		})
+	}
+}
 
 func TestAddSchema(t *testing.T) {
 	// reset package vars
