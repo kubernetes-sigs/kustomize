@@ -1359,7 +1359,11 @@ func (rn *RNode) GetFieldValue(path string) (interface{}, error) {
 	case NodeTagString:
 		return yn.Value, nil
 	case NodeTagInt:
-		return strconv.Atoi(yn.Value)
+		var result int
+		if err := yn.Decode(&result); err != nil {
+			return nil, err
+		}
+		return result, nil
 	case NodeTagFloat:
 		return strconv.ParseFloat(yn.Value, 64)
 	case NodeTagBool:
