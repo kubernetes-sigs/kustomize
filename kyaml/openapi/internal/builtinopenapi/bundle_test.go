@@ -24,6 +24,7 @@ func TestBundleValidate(t *testing.T) {
 			SelectionPolicy: SelectionPolicy,
 			Sources: []Source{{
 				KubernetesVersion: "v1.21.2",
+				GitCommit:         "092fbfbf53427de67cac1e9fa54aaa09a28371d7",
 				SHA256:            "5d171b55e9601912807a870d73ffe70bb306f5889a00e76986042a0f2d7b6bc2",
 			}},
 			Definitions: spec.Definitions{"definition": definition},
@@ -43,6 +44,25 @@ func TestBundleValidate(t *testing.T) {
 		"source":   func(bundle *Bundle) { bundle.Sources[0].SHA256 = "short" },
 		"source hex": func(bundle *Bundle) {
 			bundle.Sources[0].SHA256 = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+		},
+		"source uppercase": func(bundle *Bundle) {
+			bundle.Sources[0].SHA256 = "5D171B55E9601912807A870D73FFE70BB306F5889A00E76986042A0F2D7B6BC2"
+		},
+		"Git commit length": func(bundle *Bundle) {
+			bundle.Sources[0].GitCommit = "short"
+		},
+		"Git commit hex": func(bundle *Bundle) {
+			bundle.Sources[0].GitCommit = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+		},
+		"Git commit uppercase": func(bundle *Bundle) {
+			bundle.Sources[0].GitCommit = "092FBFBF53427DE67CAC1E9FA54AAA09A28371D7"
+		},
+		"source coverage": func(bundle *Bundle) {
+			bundle.Coverage.Ceiling = "v1.22.0"
+		},
+		"duplicate source": func(bundle *Bundle) {
+			bundle.Sources = append(bundle.Sources, bundle.Sources[0])
+			bundle.Coverage.Floor = bundle.Sources[1].KubernetesVersion
 		},
 		"definition": func(bundle *Bundle) { bundle.Resources[0].Definition = "missing" },
 		"no definitions": func(bundle *Bundle) {
@@ -65,6 +85,14 @@ func TestBundleValidate(t *testing.T) {
 		"GVK advertised by different definitions": func(bundle *Bundle) {
 			secondDefinition := bundle.Definitions["definition"]
 			bundle.Definitions["second-definition"] = secondDefinition
+		},
+		"GVK advertised twice by one definition": func(bundle *Bundle) {
+			definition := bundle.Definitions["definition"]
+			definition.Extensions[gvkExtension] = []interface{}{
+				map[string]interface{}{"group": "apps", "version": "v1", "kind": "Deployment"},
+				map[string]interface{}{"group": "apps", "version": "v1", "kind": "Deployment"},
+			}
+			bundle.Definitions["definition"] = definition
 		},
 		"order": func(bundle *Bundle) {
 			bundle.Resources = append([]Resource{{APIVersion: "v1", Kind: "Pod"}}, bundle.Resources...)
@@ -102,6 +130,11 @@ func TestBundleValidate(t *testing.T) {
 	}
 
 	require.NoError(t, func() error { bundle := valid(); return bundle.Validate() }())
+	require.NoError(t, func() error {
+		bundle := valid()
+		bundle.Sources[0].GitCommit = ""
+		return bundle.Validate()
+	}())
 	for name, mutate := range tests {
 		t.Run(name, func(t *testing.T) {
 			bundle := valid()
