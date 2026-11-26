@@ -45,6 +45,9 @@ type Options struct {
 
 	// Options related to kustomize plugins.
 	PluginConfig *types.PluginConfig
+
+	// Warnings as errors, (esp. deprecations) should be enforceable as policy failures
+	StrictWarnings bool
 }
 
 // MakeDefaultOptions returns a default instance of Options.
@@ -54,6 +57,7 @@ func MakeDefaultOptions() *Options {
 		AddManagedbyLabel: false,
 		LoadRestrictions:  types.LoadRestrictionsRootOnly,
 		PluginConfig:      types.DisabledPluginConfig(),
+		StrictWarnings:    false,
 	}
 }
 
