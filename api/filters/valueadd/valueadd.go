@@ -88,7 +88,7 @@ type Filter struct {
 	//     /a/nice/warm/pie : /a/nice/warm/PEACH/pie : 4
 	//
 	// For robustness (liberal input, conservative output) FilePathPosition
-	// values that that are too large to index the split filepath result in a
+	// values that are too large to index the split filepath result in a
 	// postfix rather than an error.  So use 1 to prefix, 9999 to postfix.
 	FilePathPosition int `json:"filePathPosition,omitempty" yaml:"filePathPosition,omitempty"`
 }
